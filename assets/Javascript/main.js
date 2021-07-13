@@ -7,8 +7,11 @@ let shading;
 
 let sphere, texturecube;
 
-let wireMaterial, pointsMaterial;
+let wireMaterial, pointsMaterial, gouraudMaterial;
 let gui
+
+const diffuseColor = new THREE.Color();
+const specularColor = new THREE.Color();
 
 
 function main() {
@@ -26,7 +29,7 @@ function main() {
             
             //Camera
             camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 80000 );
-            camera.position.set( 100, 100, 100 );
+            camera.position.set( 100, 100   , 100 );
 
             //LIGHTS
             ambientLight = new THREE.AmbientLight( 0x333333);
@@ -53,9 +56,12 @@ function main() {
             // REFILECTION MAP
 
             // MATERIALS
+            const materialColor = new THREE.Color();
+			materialColor.setRGB( 1.0, 1.0, 1.0 );
 
             wireMaterial = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
             pointsMaterial = new THREE.MeshBasicMaterial( {color: 0xffffff, wireframe: false} ); //wireframe false will not show wireframe
+            gouraudMaterial = new THREE.MeshLambertMaterial( { color: materialColor, side: THREE.DoubleSide } );
             var pointsMaterial = new THREE.PointsMaterial({
                 size: 0.5
             });
@@ -95,7 +101,7 @@ function main() {
 
             // materials (attributes)
             
-            gui.add(effectController, "newShading", ["WireFrame", "Point"]).name("shading").onChange( render );
+            gui.add(effectController, "newShading", ["WireFrame", "Point", "Smooth"]).name("shading").onChange( render );
         }
 
         function render() {
@@ -103,6 +109,18 @@ function main() {
                 shading = effectController.newShading;
                 createNewSphere();
             }
+            
+            diffuseColor.setHSL( 0.125, 0.73, 0.66 );
+
+            diffuseColor.multiplyScalar( 0.51 );
+
+            gouraudMaterial.color.copy( diffuseColor );
+
+            ambientLight.color.setHSL( 0.04, 0.01, 0.66 * 0.17 );
+
+            light.position.set( 0.32, 0.39, 0.7 );
+            light.color.setHSL( 0.04, 0.01, 1 );
+
 
             renderer.render(scene, camera);
         }
@@ -120,7 +138,8 @@ function main() {
             if (shading === "Point") {
                 sphere = new THREE.Points(sphereGeometry, pointsMaterial);
             } else {
-                sphere = new THREE.Mesh(sphereGeometry,wireMaterial);
+                sphere = new THREE.Mesh(sphereGeometry,
+                    shading === "WireFrame" ? wireMaterial : gouraudMaterial);
             }
 
             
